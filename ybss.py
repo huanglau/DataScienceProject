@@ -113,12 +113,12 @@ pdQuestionsMode = pdQuestions.fillna(value = Mode)
 
 
 # drop all qn* questions. Drop compound questions
-#pdQuestions = pdQuestions.drop([question for question in pdQuestions.columns if 'n' in question], axis='columns')
-#pdQuestionsMode = pdQuestions.fillna(value = Mode)
+pdQuestions = pdQuestions.drop([question for question in pdQuestions.columns if 'n' in question], axis='columns')
+pdQuestionsMode = pdQuestions.fillna(value = Mode)
 #%% train test split
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 
-Xtrain, Xtest, ytrain, ytest = train_test_split(pdQuestions,
+Xtrain, Xtest, ytrain, ytest = train_test_split(pdQuestionsMode,
                                                 pdIlicitDrugEverUsed, 
                                                 test_size=0.5, 
                                                 random_state=0)
@@ -152,7 +152,7 @@ dfcolumns = pd.DataFrame(pdQuestionsMode.columns)
 featureScores = pd.concat([dfcolumns,dfscores],axis=1)
 featureScores.columns = ['Specs','Score'] 
 
-print(featureScores.nlargest(10,'Score'))
+print(featureScores.nlargest(50,'Score'))
 # as expected most of the features are drug related 
 
 
