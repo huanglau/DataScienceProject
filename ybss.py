@@ -143,18 +143,20 @@ plt.show()
 
 
 #%% feature selection method 2
+# filter method. Uses chi2 to select the best features
 # https://towardsdatascience.com/feature-selection-techniques-in-machine-learning-with-python-f24e7da3f36e
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 
-BestFeatures = SelectKBest(score_func=chi2, k = 10)
-fitSelectKBest = BestFeatures.fit(pdQuestionsMode.values, pdIlicitDrugEverUsed.values)
+BestFeatures = SelectKBest(score_func=chi2, k = 100)
+fitSelectKBest = BestFeatures.fit(Xtrain.values, ytrain.values)
 dfscores = pd.DataFrame(fitSelectKBest.scores_)
-dfcolumns = pd.DataFrame(pdQuestionsMode.columns)
+dfcolumns = pd.DataFrame(Xtrain.columns)
 featureScores = pd.concat([dfcolumns,dfscores],axis=1)
 featureScores.columns = ['Specs','Score'] 
 
-print(featureScores.nlargest(50,'Score'))
+print(featureScores.nlargest(100,'Score'))
+SelectKBestFeatures = featureScores.nlargest(100,'Score').Specs.values
 # as expected most of the features are drug related 
 
 
@@ -203,7 +205,7 @@ XtestRFE = Xtest.iloc[:, fit.support_]
 XvalRFE = Xval.iloc[:, fit.support_]
 XtrainRFE = Xtrain.iloc[:, fit.support_]
 
-
+XtestRFE.to_csv("XtestRFE100.csv")
 
 #%%
 

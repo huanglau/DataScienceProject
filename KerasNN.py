@@ -9,6 +9,8 @@ Created on Thu Nov 14 20:54:20 2019
 import keras
 import numpy as np
 import keras.backend as K
+from keras.models import Sequential
+from keras.layers import Dense, Activation
 
 #%% other accuracy models
 def Precision(y_true, y_pred):
@@ -45,7 +47,7 @@ def Recall(y_true, y_pred):
     return recall
 #%% build model
 
-def fcNet(iInputSize = 100, pretrained_weights = None, iNumFreeze = 0):
+def fcNet(iInputSize = 100):
     """ 
     """
    
@@ -59,7 +61,7 @@ def fcNet(iInputSize = 100, pretrained_weights = None, iNumFreeze = 0):
 
 
 #%%
-model = fcNet(iInputSize = np.shape(Xtrain.values)[1], pretrained_weights = None, iNumFreeze = 0)
+model = fcNet(iInputSize = np.shape(XtestRFE.values)[1])
 #model.add(Dense(12, input_dim=np.shape(Xtrain.values)[1], activation='relu'))
 #model.add(Dense(8, activation='relu'))
 #model.add(Dense(1, activation='sigmoid'))
@@ -68,8 +70,8 @@ model.compile(loss='binary_crossentropy', optimizer='adam',
               metrics=['accuracy', Recall, Precision])
 
 # fit the keras model on the dataset
-X = np.array(Xtrain.values)
-y = np.reshape(np.array(ytrain.values, dtype=np.int8), (-1))
+X = np.array(XtrainRFE.values)
+y = np.reshape(np.array(ytrainRFE.values, dtype=np.int8), (-1))
 model.fit(X, y, epochs=150, batch_size=2**10,
               class_weight = {0:1, 1:100})
 # evaluate the keras model
