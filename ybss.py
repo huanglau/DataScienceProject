@@ -9,6 +9,8 @@ Created on Thu Oct  3 12:36:19 2019
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+
 
 # load up data
 data = pd.read_csv('nationalYRBS20172015')#, delimiter=' ')
@@ -28,7 +30,7 @@ lYN = ['q19', 'q23', 'q24','q25', 'q26', 'q27', 'q29', 'q30', 'q34','q39',
        'qn39', 'q58', 'q59','q63', 'qn63', 'q64', 'qn64']
 lCatagorical = ['q36', 'qn36', 'q43', 'qn43', 'q65', 'qn65', 'q66', 'q67', 
                 'q69', 'qn69', 'q85', 'q87'] # maybe Q68
-lDemographics = ['Unnamed: 0', 'sitecode', 'sitename', 'sitetype', 
+lDemographics = ['Unnamed: 0', 'Unnamed: 0.1', 'sitecode', 'sitename', 'sitetype', 
                  'sitetypenum', 'year','survyear', 'weight', 'stratum', 'PSU', 'record']
 print(data.columns)
 #%% Experimentation for predicting if teen used ANY of the ilicit drugs 
@@ -111,19 +113,19 @@ Mode = {i:pdQuestions[i].value_counts().index[0] for i in pdQuestions.columns}
 pdQuestionsMode = pdQuestions.fillna(value = Mode)
 
 
-
 # drop all qn* questions. Drop compound questions
-pdQuestions = pdQuestions.drop([question for question in pdQuestions.columns if 'n' in question], axis='columns')
-pdQuestionsMode = pdQuestions.fillna(value = Mode)
-#%% train test split
+#pdQuestions = pdQuestions.drop([question for question in pdQuestions.columns if 'n' in question], axis='columns')
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 
-Xtrain, Xtest, ytrain, ytest = train_test_split(pdQuestionsMode,
+# split into train test
                                                 pdIlicitDrugEverUsed, 
-                                                test_size=0.5, 
+                                                test_size=0.015173780800382761, # to get 444 in test set
                                                 random_state=0)
-
-
+# split train into train val
+Xtrain, Xval, ytrain, yval = train_test_split(Xtrain,
+                                                ytrain, 
+                                                test_size=0.29496477773536456, # to get 8500 in val set
+                                                random_state=0)
 #%% feature selection
 
 # Feature Importance with Extra Trees Classifier
@@ -178,4 +180,30 @@ featureScores.columns = ['Specs','Score']
 
 print(featureScores.nlargest(10,'Score'))
 # as expected most of the features are drug related 
+
+#%%  Backwards feature selection, wrapper method
+
+# Import your necessary dependencies
+from sklearn.feature_selection import RFE
+from sklearn.linear_model import LogisticRegression
+
+# Feature extraction
+model = LogisticRegression()
+rfe = RFE(model, 100)
+fit = rfe.fit(Xtrain, ytrain)
+features = np.array(Xtrain.columns)
+print("Num Features: %s" % (fit.n_features_))
+print("Selected Features: %s" % (fit.support_))
+print("Feature Ranking: %s" % (fit.ranking_))
+print(" the selected features are")
+print(features[fit.support_])
+
+# apply select only the selected features in xtrain test and val
+XtestRFE = Xtest.iloc[:, fit.support_]
+XvalRFE = Xval.iloc[:, fit.support_]
+XtrainRFE = Xtrain.iloc[:, fit.support_]
+
+
+
+#%%
 
