@@ -32,12 +32,17 @@ lCatagorical = ['q36', 'qn36', 'q43', 'qn43', 'q65', 'qn65', 'q66', 'q67',
                 'q69', 'qn69', 'q85', 'q87'] # maybe Q68
 lDemographics = ['Unnamed: 0', 'Unnamed: 0.1', 'sitecode', 'sitename', 'sitetype', 
                  'sitetypenum', 'year','survyear', 'weight', 'stratum', 'PSU', 'record']
+# 49, 50, 51, 52, 53, and 57
+lDrugs = ['q49', 'q50', 'q51', 'q52', 'q53', 'q57', 'qcurrentcocaine',
+                             'qcurrentmeth','qcurrentheroin', 'qhallucdrug',
+                             'qnhallucdrug', 'qn49', 'qn50','qn57',
+                             'qn51', 'qn52', 'qn53']
 print(data.columns)
 #%% Experimentation for predicting if teen used ANY of the ilicit drugs 
 # 0, if never used, 1 if used
 
 # data preprocessing
-def preprocessing(data, lDemographics):
+def preprocessingIlicitDrug(data, lDemographics):
     """ 
     function cleans data. First it removes rows with more tha N nans,
     then it removes the drug questinos from the X variables. Then it creates the Y var,
@@ -48,13 +53,12 @@ def preprocessing(data, lDemographics):
     data = data.dropna(thresh=150, axis='rows')
     
     # remove obvious variables that relate too closely to the prediction
-    pdQuestions = data.drop(['q49', 'q51', 'q52', 'q53', 'q57', 'qcurrentcocaine',
-                             'qcurrentmeth','qcurrentheroin', 'qhallucdrug',
-                             'qnhallucdrug', 'qn49', 'qn57',
-                             'qn51', 'qn52', 'qn53'], axis = 'columns') 
+    pdQuestions = data.drop(lDrugs, axis = 'columns') 
 
     # get prediction variable
-    pdIlicitDrugEverUsed = pd.DataFrame((data['q49'].values > 1) *  (data['q51'].values  >= 1) * (data['q52'].values>= 1) * (data['q59'].values >= 1), columns=['Ever used ilicit drugs'])
+    #49, 50, 51, 52, 53, and 57
+    pdIlicitDrugEverUsed = pd.DataFrame((data['q49'].values >= 2) + (data['q50'].values  >= 2) + (data['q51'].values  >= 2)
+                            + (data['q52'].values>= 2) + (data['q53'].values  >= 2) + (data['q57'].values >= 2), columns=['Ever used ilicit drugs'])
 
     # remove demographic data
     pdQuestions = pdQuestions.drop(lDemographics, axis='columns')
@@ -62,10 +66,12 @@ def preprocessing(data, lDemographics):
     # process dependent variables
     # make dummies
     pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = lCatagorical, drop_first=True)
+    # convert y/n answers to dummies lYN
+    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = lYN, drop_first=True)
 
     # remove columns (questions) with more than N nans
     NanThresh = 10000
-    NanColumns = np.array( [[sColumn, np.sum(pd.isnull(data[sColumn].values[:]))] for sColumn in pdQuestions if np.sum(pd.isnull(pdQuestions[sColumn].values[:])) > NanThresh])
+    NanColumns = np.array( [[sColumn, np.sum(pd.isnull(pdQuestions[sColumn].values[:]))] for sColumn in pdQuestions if np.sum(pd.isnull(pdQuestions[sColumn].values[:])) > NanThresh])
     pdQuestions = pdQuestions.drop(NanColumns[:,0], axis = 'columns')
 
     return NanColumns, pdIlicitDrugEverUsed, pdQuestions
@@ -82,12 +88,13 @@ def preprocessingNoDrugs(data):
     data = data.dropna(thresh=150, axis='rows')
 
     # get prediction variable
-    #TODO: check if this is correct
-    pdIlicitDrugEverUsed = pd.DataFrame((data['q49'].values >= 1) *  (data['q51'].values  >= 1) * (data['q52'].values>= 1) * (data['q59'].values >= 1), columns=['Ever used ilicit drugs'])
-
+    #49, 50, 51, 52, 53, and 57
+    pdIlicitDrugEverUsed = pd.DataFrame((data['q49'].values >= 2) + (data['q50'].values  >= 2) + (data['q51'].values  >= 2)
+                            + (data['q52'].values>= 2) + (data['q53'].values  >= 2) + (data['q57'].values >= 2), columns=['Ever used ilicit drugs'])
 
     # remove all drug related factors (any drugs at all)
     pdQuestions = data.drop(['q{}'.format(str(i)) for i in range(30,58)], axis = 'columns') 
+    # drug questions for alcohol, cigarettes etc
     pdQuestions = pdQuestions.drop(['qn{}'.format(str(i)) for i in range(30,58)], axis = 'columns') 
     pdQuestions = pdQuestions.drop(['qcurrentcocaine','qcurrentmeth','qcurrentheroin', 'qhallucdrug',
                              'qnhallucdrug'], axis = 'columns') 
@@ -107,7 +114,7 @@ def preprocessingNoDrugs(data):
 
     return pdIlicitDrugEverUsed, pdQuestions
 
-NanColumns, pdIlicitDrugEverUsed, pdQuestions = preprocessing(data, lDemographics)
+NanColumns, pdIlicitDrugEverUsed, pdQuestions = preprocessingIlicitDrug(data, lDemographics)
 # fills in Nans with most frequent catagory
 Mode = {i:pdQuestions[i].value_counts().index[0] for i in pdQuestions.columns}
 pdQuestionsMode = pdQuestions.fillna(value = Mode)
@@ -118,6 +125,7 @@ pdQuestionsMode = pdQuestions.fillna(value = Mode)
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 
 # split into train test
+Xtrain, Xtest, ytrain, ytest = train_test_split( pdQuestionsMode,
                                                 pdIlicitDrugEverUsed, 
                                                 test_size=0.015173780800382761, # to get 444 in test set
                                                 random_state=0)
@@ -132,18 +140,18 @@ Xtrain, Xval, ytrain, yval = train_test_split(Xtrain,
 from sklearn.ensemble import ExtraTreesClassifier
 
 # feature extraction
-model = ExtraTreesClassifier()
-model.fit(pdQuestionsMode.values, pdIlicitDrugEverUsed.values)
+model = ExtraTreesClassifier(random_state = 0)
+model.fit(Xtrain.values, ytrain.values)
 print(model.feature_importances_)
 print(pdQuestionsMode.columns[model.feature_importances_ > 0])
 print(pdQuestionsMode.columns[model.feature_importances_ == 0])
 feat_importances = pd.Series(model.feature_importances_, index=pdQuestionsMode.columns)
-feat_importances.nlargest(10).plot(kind='barh')
+feat_importances.nlargest(100).plot(kind='barh')
 plt.show()
 
 
 #%% feature selection method 2
-# filter method. Uses chi2 to select the best features
+# filter method. Uses chi2 to select the best features. This is a filter method
 # https://towardsdatascience.com/feature-selection-techniques-in-machine-learning-with-python-f24e7da3f36e
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
@@ -161,26 +169,26 @@ SelectKBestFeatures = featureScores.nlargest(100,'Score').Specs.values
 
 
 #%% reanalyze with no drug wuestins at all
-pdIlicitDrugEverUsed, pdQuestionsNoDrugs = preprocessingNoDrugs(data)
-pdQuestionsNoDrugsMode = pdQuestionsNoDrugs.fillna(value = Mode)
-
-model = ExtraTreesClassifier()
-model.fit(pdQuestionsNoDrugsMode.values, pdIlicitDrugEverUsed.values)
-print(model.feature_importances_)
-print(pdQuestionsNoDrugsMode.columns[model.feature_importances_ > 0])
-print(pdQuestionsNoDrugsMode.columns[model.feature_importances_ == 0])
-feat_importances = pd.Series(model.feature_importances_, index=pdQuestionsNoDrugsMode.columns)
-feat_importances.nlargest(10).plot(kind='barh')
-plt.show()
-
-BestFeatures = SelectKBest(score_func=chi2, k = 10)
-fitSelectKBest = BestFeatures.fit(pdQuestionsNoDrugsMode.values, pdIlicitDrugEverUsed.values)
-dfscores = pd.DataFrame(fitSelectKBest.scores_)
-dfcolumns = pd.DataFrame(pdQuestionsNoDrugsMode.columns)
-featureScores = pd.concat([dfcolumns,dfscores],axis=1)
-featureScores.columns = ['Specs','Score'] 
-
-print(featureScores.nlargest(10,'Score'))
+#pdIlicitDrugEverUsed, pdQuestionsNoDrugs = preprocessingNoDrugs(data)
+#pdQuestionsNoDrugsMode = pdQuestionsNoDrugs.fillna(value = Mode)
+#
+#model = ExtraTreesClassifier(seed = 0)
+#model.fit(pdQuestionsNoDrugsMode.values, pdIlicitDrugEverUsed.values)
+#print(model.feature_importances_)
+#print(pdQuestionsNoDrugsMode.columns[model.feature_importances_ > 0])
+#print(pdQuestionsNoDrugsMode.columns[model.feature_importances_ == 0])
+#feat_importances = pd.Series(model.feature_importances_, index=pdQuestionsNoDrugsMode.columns)
+#feat_importances.nlargest(10).plot(kind='barh')
+#plt.show()
+#
+#BestFeatures = SelectKBest(score_func=chi2, k = 10)
+#fitSelectKBest = BestFeatures.fit(pdQuestionsNoDrugsMode.values, pdIlicitDrugEverUsed.values)
+#dfscores = pd.DataFrame(fitSelectKBest.scores_)
+#dfcolumns = pd.DataFrame(pdQuestionsNoDrugsMode.columns)
+#featureScores = pd.concat([dfcolumns,dfscores],axis=1)
+#featureScores.columns = ['Specs','Score'] 
+#
+#print(featureScores.nlargest(10,'Score'))
 # as expected most of the features are drug related 
 
 #%%  Backwards feature selection, wrapper method
@@ -190,7 +198,7 @@ from sklearn.feature_selection import RFE
 from sklearn.linear_model import LogisticRegression
 
 # Feature extraction
-model = LogisticRegression()
+model = LogisticRegression(random_state = 0)
 rfe = RFE(model, 100)
 fit = rfe.fit(Xtrain, ytrain)
 features = np.array(Xtrain.columns)
@@ -205,7 +213,7 @@ XtestRFE = Xtest.iloc[:, fit.support_]
 XvalRFE = Xval.iloc[:, fit.support_]
 XtrainRFE = Xtrain.iloc[:, fit.support_]
 
-XtestRFE.to_csv("XtestRFE100.csv")
+XtestRFE.to_csv("FeatureSelection/XtestRFE100.csv")
 
 #%%
 
