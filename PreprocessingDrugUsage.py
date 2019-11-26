@@ -42,7 +42,7 @@ print(data.columns)
 # 0, if never used, 1 if used
 
 # data preprocessing
-def preprocessingIlicitDrug(data, lDemographics):
+def preprocessingIlicitDrug(data, lDemographics, Mode = True):
     """ 
     function cleans data. First it removes rows with more tha N nans,
     then it removes the drug questinos from the X variables. Then it creates the Y var,
@@ -74,10 +74,14 @@ def preprocessingIlicitDrug(data, lDemographics):
     NanColumns = np.array( [[sColumn, np.sum(pd.isnull(pdQuestions[sColumn].values[:]))] for sColumn in pdQuestions if np.sum(pd.isnull(pdQuestions[sColumn].values[:])) > NanThresh])
     pdQuestions = pdQuestions.drop(NanColumns[:,0], axis = 'columns')
 
+    if Mode == True:
+        # fills in Nans with most frequent catagory
+        Mode = {i:pdQuestions[i].value_counts().index[0] for i in pdQuestions.columns}
+        pdQuestions = pdQuestions.fillna(value = Mode)
     return NanColumns, pdIlicitDrugEverUsed, pdQuestions
 
 # data preprocessing
-def preprocessingNoDrugs(data):
+def preprocessingNoDrugs(data, Mode = True):
     """ 
     function cleans data. First it removes rows with more tha N nans,
     then it removes the drug questinos from the X variables. Then it creates the Y var,
@@ -111,13 +115,15 @@ def preprocessingNoDrugs(data):
     NanThresh = 10000
     NanColumns = np.array( [[sColumn, np.sum(pd.isnull(data[sColumn].values[:]))] for sColumn in pdQuestions if np.sum(pd.isnull(pdQuestions[sColumn].values[:])) > NanThresh])
     pdQuestions = pdQuestions.drop(NanColumns[:,0], axis = 'columns')
+    
+    if Mode == True:
+        # fills in Nans with most frequent catagory
+        Mode = {i:pdQuestions[i].value_counts().index[0] for i in pdQuestions.columns}
+        pdQuestions = pdQuestions.fillna(value = Mode)
 
     return pdIlicitDrugEverUsed, pdQuestions
 
 NanColumns, pdIlicitDrugEverUsed, pdQuestions = preprocessingIlicitDrug(data, lDemographics)
-# fills in Nans with most frequent catagory
-Mode = {i:pdQuestions[i].value_counts().index[0] for i in pdQuestions.columns}
-pdQuestionsMode = pdQuestions.fillna(value = Mode)
 
 
 # drop all qn* questions. Drop compound questions
@@ -125,7 +131,7 @@ pdQuestionsMode = pdQuestions.fillna(value = Mode)
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 
 # split into train test
-Xtrain, Xtest, ytrain, ytest = train_test_split( pdQuestionsMode,
+Xtrain, Xtest, ytrain, ytest = train_test_split( pdQuestions,
                                                 pdIlicitDrugEverUsed, 
                                                 test_size=0.015173780800382761, # to get 444 in test set
                                                 random_state=0)
@@ -139,34 +145,66 @@ Xtrain, Xval, ytrain, yval = train_test_split(Xtrain,
 # Feature Importance with Extra Trees Classifier
 from sklearn.ensemble import ExtraTreesClassifier
 
-# feature extraction
-model = ExtraTreesClassifier(random_state = 0)
-model.fit(Xtrain.values, ytrain.values)
-print(model.feature_importances_)
-print(pdQuestionsMode.columns[model.feature_importances_ > 0])
-print(pdQuestionsMode.columns[model.feature_importances_ == 0])
-feat_importances = pd.Series(model.feature_importances_, index=pdQuestionsMode.columns)
-feat_importances.nlargest(100).plot(kind='barh')
-plt.show()
+def ExtraTrees(X, y, numFeat):
+    """
+    Runs extra trees classifier on data. This
+    "This class implements a meta estimator that fits a number of randomized decision trees
+    (a.k.a. extra-trees) on various sub-samples of the dataset and uses averaging to improve the predictive accuracy and control over-fitting."
+    
+    Inputs: X: xvalue. dataframe
+            Y: yvalues. dataframe
+            numFeat: integer. Number of features to be selected
+    outputs:
+        -features with importance. 
+        -list of questions
+    
+    """
+    # feature extraction
+    model = ExtraTreesClassifier(random_state = 0)
+    model.fit(X.values, y.values)
+    print(model.feature_importances_)
+    print(pdQuestionsMode.columns[model.feature_importances_ > 0])
+    print(pdQuestionsMode.columns[model.feature_importances_ == 0])
+    feat_importances = pd.Series(model.feature_importances_, index=pdQuestionsMode.columns)
+    feat_importances.nlargest(numFeat).plot(kind='barh')
+    plt.show()
+    return feat_importances.nlargest(numFeat), (feat_importances.nlargest(numFeat)).axes
+    
 
+EFeatScores, ETFeat = ExtraTrees(Xtrain, ytrain, 100)
 
+XtestExtraTrees = pd.DataFrame([Xtest[col] for col in ETFeat], index = [title for title in ETFeat])
+
+XtestRFE = Xtest.iloc[:, ETFeat.support_]
+XvalRFE = Xval.iloc[:, RFEFeat.support_]
+XtrainRFE = Xtrain.iloc[:, RFEFeat.support_]
 #%% feature selection method 2
 # filter method. Uses chi2 to select the best features. This is a filter method
 # https://towardsdatascience.com/feature-selection-techniques-in-machine-learning-with-python-f24e7da3f36e
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 
-BestFeatures = SelectKBest(score_func=chi2, k = 100)
-fitSelectKBest = BestFeatures.fit(Xtrain.values, ytrain.values)
-dfscores = pd.DataFrame(fitSelectKBest.scores_)
-dfcolumns = pd.DataFrame(Xtrain.columns)
-featureScores = pd.concat([dfcolumns,dfscores],axis=1)
-featureScores.columns = ['Specs','Score'] 
+def KBest (X, y, numFeat, score_func=chi2):
+    """
+     filter method. Uses chi2 to select the best features. This is a filter method
+     https://towardsdatascience.com/feature-selection-techniques-in-machine-learning-with-python-f24e7da3f36e
+     
+     output:
+         list of to numFeat featurenames
+    """
+    BestFeatures = SelectKBest(score_func=score_func, k = numFeat)
+    fitSelectKBest = BestFeatures.fit(X.values, y.values)
+    dfscores = pd.DataFrame(fitSelectKBest.scores_)
+    dfcolumns = pd.DataFrame(Xtrain.columns)
+    featureScores = pd.concat([dfcolumns,dfscores],axis=1)
+    featureScores.columns = ['Specs','Score'] 
+    
+    print(featureScores.nlargest(numFeat,'Score'))
+    SelectKBestFeatures = featureScores.nlargest(numFeat,'Score').Specs.values
+    return SelectKBestFeatures
 
-print(featureScores.nlargest(100,'Score'))
-SelectKBestFeatures = featureScores.nlargest(100,'Score').Specs.values
 # as expected most of the features are drug related 
-
+KBestFeatures = KBest (Xtrain, ytrain, numFeat=100, score_func=chi2)
 
 #%% reanalyze with no drug wuestins at all
 #pdIlicitDrugEverUsed, pdQuestionsNoDrugs = preprocessingNoDrugs(data)
@@ -197,22 +235,30 @@ SelectKBestFeatures = featureScores.nlargest(100,'Score').Specs.values
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import LogisticRegression
 
-# Feature extraction
-model = LogisticRegression(random_state = 0)
-rfe = RFE(model, 100)
-fit = rfe.fit(Xtrain, ytrain)
-features = np.array(Xtrain.columns)
-print("Num Features: %s" % (fit.n_features_))
-print("Selected Features: %s" % (fit.support_))
-print("Feature Ranking: %s" % (fit.ranking_))
-print(" the selected features are")
-print(features[fit.support_])
+def LogRegFeat(X, y, numFeat):
+    """
+    uses backwards feature selection. Wrapper method. Involves fitting a model.
+    """
+    # Feature extraction
+    model = LogisticRegression(random_state = 0)
+    rfe = RFE(model, numFeat)
+    fit = rfe.fit(X.values, y.values)
+    features = np.array(X.columns)
+    print("Num Features: %s" % (fit.n_features_))
+    print("Selected Features: %s" % (fit.support_))
+    print("Feature Ranking: %s" % (fit.ranking_))
+    print(" the selected features are")
+    print(features[fit.support_])
+    
+
+    return features[fit.support_], fit
+    
+RFEFeat RFEFit = LogRegFeat(Xtrain, ytrain, numFeat=100)
 
 # apply select only the selected features in xtrain test and val
-XtestRFE = Xtest.iloc[:, fit.support_]
-XvalRFE = Xval.iloc[:, fit.support_]
-XtrainRFE = Xtrain.iloc[:, fit.support_]
-
+XtestRFE = Xtest.iloc[:, RFEFit.support_]
+XvalRFE = Xval.iloc[:, RFEFeat.support_]
+XtrainRFE = Xtrain.iloc[:, RFEFeat.support_]
 XtestRFE.to_csv("FeatureSelection/XtestRFE100.csv")
 
 #%%
