@@ -11,6 +11,8 @@ import numpy as np
 import keras.backend as K
 from keras.models import Sequential
 from keras.layers import Dense, Activation
+from sklearn import metrics
+import sklearn
 
 #%% other accuracy models
 def Precision(y_true, y_pred):
@@ -45,7 +47,21 @@ def Recall(y_true, y_pred):
     possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
     recall = true_positives / (possible_positives + K.epsilon())
     return recall
+
+
+#%% error metrics for classifications
+def GenAUC(npPred, npTruth):
+    """
+    generates auc, false pos rate, true pos rate and thresholds of each given a prediction and
+    truth numpt array. Should work in any dimentional data. 
+    Assumes binary classification and that a positive result is a 1
+    """
+    fpr, tpr, thresholds = metrics.roc_curve(npTruth, npPred, pos_label =1)
+    return metrics.auc(fpr, tpr), fpr, tpr, thresholds
 #%% build model
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import Dropout
 
 def fcNet(iInputSize = 100):
     """ 
