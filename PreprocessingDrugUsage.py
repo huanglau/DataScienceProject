@@ -173,7 +173,7 @@ def ExtraTrees(X, y, numFeat):
 
 EFeatScores, ETFeat = ExtraTrees(Xtrain, ytrain, 100)
 
-XtestExtraTrees = pd.DataFrame([Xtest[col] for col in ETFeat], index = [title for title in ETFeat])
+XtestExtraTrees = pd.DataFrame([Xtest[col] for col in ETFeat], index = ETFeat[0])
 
 XtestRFE = Xtest.iloc[:, ETFeat.support_]
 XvalRFE = Xval.iloc[:, RFEFeat.support_]
