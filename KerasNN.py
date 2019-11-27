@@ -66,8 +66,6 @@ from keras.layers import Dropout
 def fcNet(iInputSize = 100):
     """ 
     """
-   
-
     model = Sequential()
     model.add(Dense(256, input_dim=iInputSize, activation='relu'))
     model.add(Dense(256, activation='relu'))

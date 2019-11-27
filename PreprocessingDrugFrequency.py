@@ -1,15 +1,9 @@
+# -*- coding: utf-8 -*-
 """
+Created on Thu Oct  3 12:36:19 2019
 
-The second model is intended to help identify youth at risk of or with addictive 
-patterns of tobacco and/or alcohol consumption, and will predict the frequency 
-of alcohol and/or tobacco product use in the past 30 days. The outcome is operationalized 
-as a categorical variable with seven response categories ranging from zero to all 30 days.
- The highest frequency of response is used from student answers to questions 32 (cigarettes),
- 35 (electronic vapor product), 37 (chewing tobacco, snuff, dip, snus, or dissolvable tobacco products),
- 38 (cigars, cigarettes or little cigars), and 42 (alcohol). 
-
+@author: vector
 """
-
 
 import pandas as pd
 import numpy as np
@@ -19,24 +13,27 @@ import os
 
 # load up data
 data = pd.read_csv('nationalYRBS20172015')#, delimiter=' ')
-data.columns
 
 # data that is y/n questions
 lYN = ['q19', 'q23', 'q24','q25', 'q26', 'q27', 'q29', 'q30', 'q34','q39', 
-       'qn39', 'q58', 'q59','q63', 'qn63', 'q64', 'qn64']
-lCatagorical = ['q36', 'qn36', 'q43', 'qn43', 'q65', 'qn65', 'q66', 'q67', 
-                'q69', 'qn69', 'q85', 'q87'] # maybe Q68
+       'q58', 'q59','q63',  'q64']
+lCatagorical = ['q36', 'q43', 'qn43', 'q65',  'q66', 'q67', 
+                'q69', 'q85', 'q87'] # maybe Q68
+# remove stheight. Only 2885 users answered this. Removed bmipct. This is the bmi percentail
 lDemographics = ['Unnamed: 0', 'Unnamed: 0.1', 'sitecode', 'sitename', 'sitetype', 
-                 'sitetypenum', 'year','survyear', 'weight', 'stratum', 'PSU', 'record']
-lDrugs = ['q49', 'q50', 'q51', 'q52', 'q53', 'q57', 'qcurrentcocaine',
-                             'qcurrentmeth','qcurrentheroin', 'qhallucdrug',
-                             'qnhallucdrug', 'qn49', 'qn50','qn57',
-                             'qn51', 'qn52', 'qn53']
+                 'sitetypenum', 'year','survyear',  'PSU', 'record', 'stheight', 'bmipct'] # stratum
+lNotInBoth20172015 = ['grade', 'bmipct', 'q10', 'q16', 'q18', 'q23', 'q35', 'q63']
+# questions about drug frequency
+# 32, 35, 37, 38, 42
+lFreq = ['q32', 'q35', 'q37', 'q38', 'q42']
+#                             'qnhallucdrug', 'qn49', 'qn50','qn57',
+#                            'qn51', 'qn52', 'qn53']
 print(data.columns)
-#%% Experimentation for predicting drug frequency
+#%% Experimentation for predicting if teen used ANY of the ilicit drugs 
+# 0, if never used, 1 if used
 
 # data preprocessing
-def preprocessingDrugFreq(data, lDemographics, Mode = True):
+def preprocessingDrugFreq(data, lDemographics, sOutDir, DropAllDrugs = False):
     """ 
     function cleans data. First it removes rows with more tha N nans,
     then it removes the drug questinos from the X variables. Then it creates the Y var,
@@ -49,94 +46,63 @@ def preprocessingDrugFreq(data, lDemographics, Mode = True):
     38 (cigars, cigarettes or little cigars), and 42 (alcohol). 
 
     """
-    #clean out rows (persons) with more than 150 NAN values
-    data = data.dropna(thresh=150, axis='rows')
+    # get prediction variable
+    # 32, 35, 37, 38, 42
+    freqThresh = 2
+    pdFreq = pd.DataFrame((data['q32'].values >= freqThresh) + (data['q35'].values  >= freqThresh) 
+                            + (data['q37'].values  >= freqThresh)
+                            + (data['q38'].values>= freqThresh)
+                            + (data['q42'].values  >= freqThresh), columns=['Freq Drug Use'])
     
+    # remove questions that werrn't asked in both years
+    df15 = data[data['year'] == 2015]
+    df17 = data[data['year'] == 2017]
+    TooManyNans15 =[ Col for Col in df15.columns if df15[Col].isna().sum() >= len(df15)]
+    TooManyNans17 =[ Col for Col in df17.columns if df17[Col].isna().sum() >= len(df17)]
+    TooManyNans = list(set(TooManyNans15) | set(TooManyNans17))
+    pdQuestions = data.drop(TooManyNans, axis='columns')
+    
+    # drop out all 'qn*' data
+    pdQuestions = pdQuestions.drop([i for i in pdQuestions.columns if 'qn' in i], axis = 'columns') 
+
+    # remove demographic data, and useless data
+    pdQuestions = pdQuestions.drop(lDemographics, axis='columns')
+   
     # remove obvious variables that relate too closely to the prediction
-    pdQuestions = data.drop(lDrugs, axis = 'columns') 
+    # only remove if they weren't removed alreadt
+    if len([freq for freq in lFreq if freq in pdQuestions.columns]) > 0:
+        pdQuestions = pdQuestions.drop([freq for freq in lFreq if freq in pdQuestions.columns], axis = 'columns') 
+    if DropAllDrugs == True:
+            # remove all drug related factors (any drugs at all)
+            pdQuestions = pdQuestions.drop(['q{}'.format(str(i)) for i in range(30,58) if 'q{}'.format(str(i))  in pdQuestions.columns], axis = 'columns') 
+    
+    # standardize height and weight
+    numeric_variables = ['weight', 'bmi']
+    #Subtract the mean
+    pdQuestions.loc[:, numeric_variables] = (pdQuestions.loc[:, numeric_variables] - pdQuestions.loc[:, numeric_variables].mean())
 
-    # get prediction variable. Max freq. Ignored Nan's
-    #32, 35, 37, 38, 42
-    pdFreq = pd.DataFrame(np.nanmax(np.array([data['q32'].values, data['q35'].values , data['q37'].values, 
-                                         data['q38'].values, data['q42'].values]) , axis = 0), columns=['Freq Drug Use'])
+    #Divide by the standard deviation
+    pdQuestions.loc[:, numeric_variables] = pdQuestions.loc[:, numeric_variables]/pdQuestions.loc[:,numeric_variables].std()
 
-    # remove demographic data
-    pdQuestions = pdQuestions.drop(lDemographics, axis='columns')
+    # fills in Nans with 0 for non-answer
+    pdQuestions = pdQuestions.fillna(value = 0)
 
-    # process dependent variables
-    # make dummies
-    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = lCatagorical, drop_first=True)
+    # process dependent variables, make dummies
+    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lCatagorical if col in pdQuestions.columns], drop_first=True)
     # convert y/n answers to dummies lYN
-    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = lYN, drop_first=True)
+    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lYN if col in pdQuestions.columns],  drop_first=True)
 
-    # remove columns (questions) with more than N nans
-    NanThresh = 10000
-    NanColumns = np.array( [[sColumn, np.sum(pd.isnull(pdQuestions[sColumn].values[:]))] for sColumn in pdQuestions if np.sum(pd.isnull(pdQuestions[sColumn].values[:])) > NanThresh])
-    pdQuestions = pdQuestions.drop(NanColumns[:,0], axis = 'columns')
+    # save as csv
+    # stack the two pandas into one file
+    pdQuestions = pdQuestions.fillna(value = 0)
 
-    if Mode == True:
-        # fills in Nans with most frequent catagory
-        Mode = {i:pdQuestions[i].value_counts().index[0] for i in pdQuestions.columns}
-        pdQuestions = pdQuestions.fillna(value = Mode)
-
-    return NanColumns, pdFreq, pdQuestions
-
-# data preprocessing
-def preprocessingNoDrugs(data, Mode = True):
-    """ 
-    function cleans data. First it removes rows with more tha N nans,
-    then it removes the drug questinos from the X variables. Then it creates the Y var,
-    then it drops demographic variables, then creates dummy vars for catagorical data,
-    then removes columns with N nans
-    """
-    #clean out rows (persons) with more than 150 NAN values
-    data = data.dropna(thresh=150, axis='rows')
-    
-    # get prediction variable. Max freq. Ignored Nan's
-    #32, 35, 37, 38, 42
-    pdFreq = pd.DataFrame(np.nanmax(np.array([data['q32'].values, data['q35'].values , data['q37'].values, 
-                                         data['q38'].values, data['q42'].values]) , axis = 0), columns=['Freq Drug Use'])
-
-    # remove all drug related factors (any drugs at all)
-    pdQuestions = data.drop(['q{}'.format(str(i)) for i in range(30,58)], axis = 'columns') 
-    # drug questions for alcohol, cigarettes etc
-    pdQuestions = pdQuestions.drop(['qn{}'.format(str(i)) for i in range(30,58)], axis = 'columns') 
-    pdQuestions = pdQuestions.drop(['qcurrentcocaine','qcurrentmeth','qcurrentheroin', 'qhallucdrug',
-                             'qnhallucdrug'], axis = 'columns') 
-
-    # remove demographic data
-    pdQuestions = pdQuestions.drop(lDemographics, axis='columns')
-
-    # process dependent variables
-    # make dummies
-    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [ 'q65', 'qn65', 'q66', 'q67', 
-                'q69', 'qn69', 'q85', 'q87'] , drop_first=True)
-
-    # remove columns (questions) with more than N nans
-    NanThresh = 10000
-    NanColumns = np.array( [[sColumn, np.sum(pd.isnull(data[sColumn].values[:]))] for sColumn in pdQuestions if np.sum(pd.isnull(pdQuestions[sColumn].values[:])) > NanThresh])
-    pdQuestions = pdQuestions.drop(NanColumns[:,0], axis = 'columns')
-    
-    if Mode == True:
-        # fills in Nans with most frequent catagory
-        Mode = {i:pdQuestions[i].value_counts().index[0] for i in pdQuestions.columns}
-        pdQuestions = pdQuestions.fillna(value = Mode)
+    # combine the data to for something to ouput to csv
+    dfAllData = pd.concat([pdFreq, pdQuestions], axis = 1)
+    #clean out rows (persons) with more than half the answers missing
+    dfAllData = dfAllData.dropna(thresh=int(len(pdQuestions.columns)/2), axis='rows')
+    dfAllData.to_csv(sOutDir, index=False)    
     return pdFreq, pdQuestions
 
-NanColumns, pdIlicitDrugEverUsed, pdQuestions = preprocessingDrugFreq(data, lDemographics)
-
-
-# drop all qn* questions. Drop compound questions
-#pdQuestions = pdQuestions.drop([question for question in pdQuestions.columns if 'n' in question], axis='columns')
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
-
-# split into train test
-Xtrain, Xtest, ytrain, ytest = train_test_split(pdQuestions,
-                                                pdIlicitDrugEverUsed, 
-                                                test_size=0.015173780800382761, # to get 444 in test set
-                                                random_state=0)
-# split train into train val
-Xtrain, Xval, ytrain, yval = train_test_split(Xtrain,
-                                                ytrain, 
-                                                test_size=0.29496477773536456, # to get 8500 in val set
-                                                random_state=0)
+# run to output cleaned data
+preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2.csv', DropAllDrugs = False)
+preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2NoDrugQsInX.csv', DropAllDrugs = True)
