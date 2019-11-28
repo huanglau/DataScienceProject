@@ -21,7 +21,7 @@ lCatagorical = ['q36', 'q43', 'qn43', 'q65',  'q66', 'q67',
                 'q69', 'q85', 'q87'] # maybe Q68
 # remove stheight. Only 2885 users answered this. Removed bmipct. This is the bmi percentail
 lDemographics = ['Unnamed: 0', 'Unnamed: 0.1', 'sitecode', 'sitename', 'sitetype', 
-                 'sitetypenum', 'year','survyear',  'PSU', 'record', 'stheight', 'bmipct'] # stratum
+                 'sitetypenum', 'year','survyear',  'PSU', 'record', 'stheight', 'bmipct', 'stratum'] # stratum
 lNotInBoth20172015 = ['grade', 'bmipct', 'q10', 'q16', 'q18', 'q23', 'q35', 'q63']
 # questions about drug frequency
 # 32, 35, 37, 38, 42
@@ -73,8 +73,8 @@ def preprocessingDrugFreq(data, lDemographics, sOutDir, DropAllDrugs = False):
     if len([freq for freq in lFreq if freq in pdQuestions.columns]) > 0:
         pdQuestions = pdQuestions.drop([freq for freq in lFreq if freq in pdQuestions.columns], axis = 'columns') 
     if DropAllDrugs == True:
-            # remove all drug related factors (any drugs at all)
-            pdQuestions = pdQuestions.drop(['q{}'.format(str(i)) for i in range(30,58) if 'q{}'.format(str(i))  in pdQuestions.columns], axis = 'columns') 
+        # remove all drug related factors (any drugs at all)
+        pdQuestions = pdQuestions.drop(['q{}'.format(str(i)) for i in range(30,58) if 'q{}'.format(str(i))  in pdQuestions.columns], axis = 'columns') 
     
     # standardize height and weight
     numeric_variables = ['weight', 'bmi']
@@ -84,13 +84,13 @@ def preprocessingDrugFreq(data, lDemographics, sOutDir, DropAllDrugs = False):
     #Divide by the standard deviation
     pdQuestions.loc[:, numeric_variables] = pdQuestions.loc[:, numeric_variables]/pdQuestions.loc[:,numeric_variables].std()
 
-    # fills in Nans with 0 for non-answer
-    pdQuestions = pdQuestions.fillna(value = 0)
+    #clean out rows (persons) with more than half the answers missing
+    pdQuestions = pdQuestions.dropna(thresh=int(len(pdQuestions.columns)/2), axis='rows')
 
     # process dependent variables, make dummies
-    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lCatagorical if col in pdQuestions.columns], drop_first=True)
+    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lCatagorical if col in pdQuestions.columns], drop_first=True, dummy_na=True)
     # convert y/n answers to dummies lYN
-    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lYN if col in pdQuestions.columns],  drop_first=True)
+    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lYN if col in pdQuestions.columns],  drop_first=True, dummy_na=True)
 
     # save as csv
     # stack the two pandas into one file
@@ -99,10 +99,10 @@ def preprocessingDrugFreq(data, lDemographics, sOutDir, DropAllDrugs = False):
     # combine the data to for something to ouput to csv
     dfAllData = pd.concat([pdFreq, pdQuestions], axis = 1)
     #clean out rows (persons) with more than half the answers missing
-    dfAllData = dfAllData.dropna(thresh=int(len(pdQuestions.columns)/2), axis='rows')
+#    dfAllData = dfAllData.dropna(thresh=int(len(pdQuestions.columns)/2), axis='rows')
     dfAllData.to_csv(sOutDir, index=False)    
     return pdFreq, pdQuestions
 
 # run to output cleaned data
-preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2.csv', DropAllDrugs = False)
-preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2NoDrugQsInX.csv', DropAllDrugs = True)
+preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2WOtratum.csv', DropAllDrugs = False)
+preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2NoDrugQsInXWOStratum.csv', DropAllDrugs = True)
