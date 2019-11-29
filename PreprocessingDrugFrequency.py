@@ -21,7 +21,7 @@ lCatagorical = ['q36', 'q43', 'qn43', 'q65',  'q66', 'q67',
                 'q69', 'q85', 'q87'] # maybe Q68
 # remove stheight. Only 2885 users answered this. Removed bmipct. This is the bmi percentail
 lDemographics = ['Unnamed: 0', 'Unnamed: 0.1', 'sitecode', 'sitename', 'sitetype', 
-                 'sitetypenum', 'year','survyear',  'PSU', 'record', 'stheight', 'bmipct', 'stratum'] # stratum
+                 'sitetypenum', 'year','survyear',  'PSU', 'record', 'stheight', 'bmipct']#, 'stratum'] # stratum
 lNotInBoth20172015 = ['grade', 'bmipct', 'q10', 'q16', 'q18', 'q23', 'q35', 'q63']
 # questions about drug frequency
 # 32, 35, 37, 38, 42
@@ -46,6 +46,11 @@ def preprocessingDrugFreq(data, lDemographics, sOutDir, DropAllDrugs = False):
     38 (cigars, cigarettes or little cigars), and 42 (alcohol). 
 
     """
+    nanRows = np.arange(0,len(data))[np.isnan(data['q32'].values)*np.isnan(data['q35'].values)*np.isnan(data['q37'].values)*np.isnan(data['q38'].values)*np.isnan(data['q42'].values)]
+    
+    # drop rows where they didn't answer all of the questions for pd Freq
+    data = data.drop(nanRows, axis='rows')
+
     # get prediction variable
     # 32, 35, 37, 38, 42
     freqThresh = 2
@@ -104,5 +109,5 @@ def preprocessingDrugFreq(data, lDemographics, sOutDir, DropAllDrugs = False):
     return pdFreq, pdQuestions
 
 # run to output cleaned data
-preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2WOtratum.csv', DropAllDrugs = False)
-preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2NoDrugQsInXWOStratum.csv', DropAllDrugs = True)
+preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2Wtratum.csv', DropAllDrugs = False)
+preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2NoDrugQsInXWStratum.csv', DropAllDrugs = True)
