@@ -51,11 +51,20 @@ def preprocessingIlicitDrug(data, lDemographics, sOutDir = 'data/Model1.csv', Dr
     then it drops demographic variables, then creates dummy vars for catagorical data,
     then removes columns with N nans
     """
+    #%% drop rows
+    # drop rows where they didn't answer all of the questions for pd Freq
+    nanRows = np.arange(0,len(data))[np.isnan(data['q49'].values)*np.isnan(data['q50'].values)
+                    *np.isnan(data['q51'].values)*np.isnan(data['q52'].values)*np.isnan(data['q53'].values) * np.isnan(data['q57'].values)]
+    data.drop(nanRows, axis='rows', inplace=True)
+    #clean out rows (persons) with more than half the answers missing
+    data.dropna(thresh=int(len(data.columns)/2), axis='rows', inplace=True)
+    
     # get prediction variable
     #49, 50, 51, 52, 53, and 57
     pdIlicitDrugEverUsed = pd.DataFrame((data['q49'].values >= 2) + (data['q50'].values  >= 2) + (data['q51'].values  >= 2)
                             + (data['q52'].values>= 2) + (data['q53'].values  >= 2) + (data['q57'].values >= 2), columns=['Ever used ilicit drugs'])
     
+    #%% drop columns
     # remove questions that werrn't asked in both years
     df15 = data[data['year'] == 2015]
     df17 = data[data['year'] == 2017]
@@ -65,38 +74,27 @@ def preprocessingIlicitDrug(data, lDemographics, sOutDir = 'data/Model1.csv', Dr
     pdQuestions = data.drop(TooManyNans, axis='columns')
     
     # drop out all 'qn*' data
-    pdQuestions = pdQuestions.drop([i for i in pdQuestions.columns if 'qn' in i], axis = 'columns') 
+    pdQuestions.drop([i for i in pdQuestions.columns if 'qn' in i], axis = 'columns', inplace=True) 
 
     # remove demographic data, and useless data
-    pdQuestions = pdQuestions.drop(lDemographics, axis='columns')
-
-    # remove columns (questions) with more than N nans
-#    NanThresh = 20000#len(pdQuestions)-1
-#    NanColumns = np.array( [[sColumn, np.sum(pd.isnull(pdQuestions[sColumn].values[:]))] for sColumn in pdQuestions if np.sum(pd.isnull(pdQuestions[sColumn].values[:])) > NanThresh])
-#    pdQuestions = pdQuestions.drop(NanColumns[:,0], axis = 'columns')
-    
+    pdQuestions.drop(lDemographics, axis='columns', inplace=True)
+   
     # remove obvious variables that relate too closely to the prediction
     # only remove if they weren't removed alreadt
     if len([drug for drug in lDrugs if drug in pdQuestions.columns]) > 0:
-        pdQuestions = pdQuestions.drop([drug for drug in lDrugs if drug in pdQuestions.columns], axis = 'columns') 
+        pdQuestions.drop([drug for drug in lDrugs if drug in pdQuestions.columns], axis = 'columns', inplace=True) 
     if DropAllDrugs == True:
         # remove all drug related factors (any drugs at all)
-        pdQuestions = pdQuestions.drop(['q{}'.format(str(i)) for i in range(30,58) if 'q{}'.format(str(i))  in pdQuestions.columns], axis = 'columns') 
+        pdQuestions.drop(['q{}'.format(str(i)) for i in range(30,58) if 'q{}'.format(str(i))  in pdQuestions.columns], axis = 'columns', inplace=True) 
     
-    #clean out rows (persons) with more than half the answers missing
-    pdQuestions = pdQuestions.dropna(thresh=int(len(pdQuestions.columns)/2), axis='rows')
-    
-    # standardize height and weight
+    # normalize the wieght from 0,1. Do this because want to use chi squared (works best for catagorical data)
+    # for feature selection. This requires positive values.
     numeric_variables = [ 'weight', 'bmi']
     #Subtract the mean
-    pdQuestions.loc[:, numeric_variables] = (pdQuestions.loc[:, numeric_variables] - pdQuestions.loc[:, numeric_variables].mean())
+    pdQuestions.loc[:, numeric_variables] = (pdQuestions.loc[:, numeric_variables] - pdQuestions.loc[:, numeric_variables].min())
 
-<<<<<<< HEAD
-XtestExtraTrees = pd.DataFrame([Xtest[col] for col in ETFeat], index = ETFeat[0])
-=======
     #Divide by the standard deviation
-    pdQuestions.loc[:, numeric_variables] = pdQuestions.loc[:, numeric_variables]/pdQuestions.loc[:,numeric_variables].std()
->>>>>>> master
+    pdQuestions.loc[:, numeric_variables] = pdQuestions.loc[:, numeric_variables]/pdQuestions.loc[:,numeric_variables].max()
 
     # fills in Nans with 0 for non-answer
     pdQuestions = pdQuestions.fillna(value = 0)
@@ -111,6 +109,8 @@ XtestExtraTrees = pd.DataFrame([Xtest[col] for col in ETFeat], index = ETFeat[0]
     pdQuestions = pdQuestions.fillna(value = 0)
 
     # combine the data to for something to ouput to csv
+    pdIlicitDrugEverUsed.reset_index(drop=True, inplace=True)
+    pdQuestions.reset_index(drop=True, inplace=True)
     dfAllData = pd.concat([pdIlicitDrugEverUsed, pdQuestions], axis = 1)
 
     dfAllData.to_csv(sOutDir, index=False)    

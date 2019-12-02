@@ -21,7 +21,7 @@ lCatagorical = ['q36', 'q43', 'qn43', 'q65',  'q66', 'q67',
                 'q69', 'q85', 'q87'] # maybe Q68
 # remove stheight. Only 2885 users answered this. Removed bmipct. This is the bmi percentail
 lDemographics = ['Unnamed: 0', 'Unnamed: 0.1', 'sitecode', 'sitename', 'sitetype', 
-                 'sitetypenum', 'year','survyear',  'PSU', 'record', 'stheight', 'bmipct']#, 'stratum'] # stratum
+                 'sitetypenum', 'year','survyear',  'PSU', 'record', 'stheight', 'bmipct', 'stratum'] # stratum
 lNotInBoth20172015 = ['grade', 'bmipct', 'q10', 'q16', 'q18', 'q23', 'q35', 'q63']
 # questions about drug frequency
 # 32, 35, 37, 38, 42
@@ -46,11 +46,14 @@ def preprocessingDrugFreq(data, lDemographics, sOutDir, DropAllDrugs = False):
     38 (cigars, cigarettes or little cigars), and 42 (alcohol). 
 
     """
-    nanRows = np.arange(0,len(data))[np.isnan(data['q32'].values)*np.isnan(data['q35'].values)*np.isnan(data['q37'].values)*np.isnan(data['q38'].values)*np.isnan(data['q42'].values)]
-    
+    #%% clean rows
     # drop rows where they didn't answer all of the questions for pd Freq
+    nanRows = np.arange(0,len(data))[np.isnan(data['q32'].values)*np.isnan(data['q35'].values)*np.isnan(data['q37'].values)*np.isnan(data['q38'].values)*np.isnan(data['q42'].values)]
     data = data.drop(nanRows, axis='rows')
-
+    #clean out rows (persons) with more than half the answers missing
+    data = data.dropna(thresh=int(len(data.columns)/2), axis='rows')
+    
+    #%%
     # get prediction variable
     # 32, 35, 37, 38, 42
     freqThresh = 2
@@ -81,13 +84,14 @@ def preprocessingDrugFreq(data, lDemographics, sOutDir, DropAllDrugs = False):
         # remove all drug related factors (any drugs at all)
         pdQuestions = pdQuestions.drop(['q{}'.format(str(i)) for i in range(30,58) if 'q{}'.format(str(i))  in pdQuestions.columns], axis = 'columns') 
     
+    
     # standardize height and weight
     numeric_variables = ['weight', 'bmi']
     #Subtract the mean
-    pdQuestions.loc[:, numeric_variables] = (pdQuestions.loc[:, numeric_variables] - pdQuestions.loc[:, numeric_variables].mean())
+    pdQuestions.loc[:, numeric_variables] = (pdQuestions.loc[:, numeric_variables] - pdQuestions.loc[:, numeric_variables].min())
 
     #Divide by the standard deviation
-    pdQuestions.loc[:, numeric_variables] = pdQuestions.loc[:, numeric_variables]/pdQuestions.loc[:,numeric_variables].std()
+    pdQuestions.loc[:, numeric_variables] = pdQuestions.loc[:, numeric_variables]/pdQuestions.loc[:,numeric_variables].max()
 
     #clean out rows (persons) with more than half the answers missing
     pdQuestions = pdQuestions.dropna(thresh=int(len(pdQuestions.columns)/2), axis='rows')
@@ -102,6 +106,8 @@ def preprocessingDrugFreq(data, lDemographics, sOutDir, DropAllDrugs = False):
     pdQuestions = pdQuestions.fillna(value = 0)
 
     # combine the data to for something to ouput to csv
+    pdFreq.reset_index(drop=True, inplace=True)
+    pdQuestions.reset_index(drop=True, inplace=True)
     dfAllData = pd.concat([pdFreq, pdQuestions], axis = 1)
     #clean out rows (persons) with more than half the answers missing
 #    dfAllData = dfAllData.dropna(thresh=int(len(pdQuestions.columns)/2), axis='rows')
@@ -109,5 +115,5 @@ def preprocessingDrugFreq(data, lDemographics, sOutDir, DropAllDrugs = False):
     return pdFreq, pdQuestions
 
 # run to output cleaned data
-preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2Wtratum.csv', DropAllDrugs = False)
-preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2NoDrugQsInXWStratum.csv', DropAllDrugs = True)
+preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2WOStratum.csv', DropAllDrugs = False)
+preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2NoDrugQsInXWOStratum.csv', DropAllDrugs = True)
