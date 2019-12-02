@@ -7,6 +7,7 @@ Created on Thu Nov 14 20:54:20 2019
 """
 
 import keras
+import os
 import pandas as pd
 import numpy as np
 import keras.backend as K
@@ -76,8 +77,8 @@ def fcNet(iInputSize = 100):
 #    model.add(Dropout(0.5))    
 #    model.add(Dense(256, activation='relu'))
 #    model.add(Dense(512, activation='relu'))
-#    model.add(Dropout(0.5))
-    model.add(Dense(128, activation='relu')) 
+    model.add(Dropout(0.5))
+#    model.add(Dense(128, activation='relu')) 
     model.add(Dense(128, activation='relu')) 
     
     model.add(Dense(8, activation='relu'))
@@ -128,8 +129,8 @@ def NFoldCrossVal(X, y, sOutDir, numFolds = 5):
         pdConf = pdConf.append({'Fold':fold, 'FNR': FNR, 'FPR':FPR, 'auc':auc, 'f1':F1,
                                                 'recall': recall, 'precision':precision,
                                                 'Error Rate':ErrorRate}, ignore_index=True)
-        Error.SaveTrainingHistory("{}foldhistory".format( fold), model, history)
-    pdConf.to_csv(sOutDir, index=False)   
+        Error.SaveTrainingHistory(os.path.join(sOutDir, "{}foldhistory".format(fold)), model, history)
+    pdConf.to_csv(os.path.join(sOutDir, 'ErrorMetrics.csv'), index=False)   
     
 ##%%    
 #dfModel1 = pd.read_csv("../data/Model1WOStratum.csv")
@@ -142,7 +143,7 @@ def NFoldCrossVal(X, y, sOutDir, numFolds = 5):
 #NFoldCrossVal(X, y, '5FoldModel1NN.csv')
 
 #%%
-for i in range(0,150,10):
+for i in range(10,140,10):
     dfModel1 = pd.read_csv("../data/SelectedFeatures/Model1_{}Feat_KBest_chi2.csv".format(i))
     dfModel1 = pd.read_csv("../data/SelectedFeatures/Model1_{}Feat_KBest_chi2.csv".format(i))
     
@@ -150,4 +151,4 @@ for i in range(0,150,10):
     X = dfModel1.drop(['Ever used ilicit drugs'], axis='columns')
     y = pd.DataFrame(dfModel1['Ever used ilicit drugs'])
         
-    NFoldCrossVal(X, y, '{}features/5FoldModel1NN_{}Feat_KBest_chi2.csv'.format(i))
+    NFoldCrossVal(X, y, '5FoldModel1NN_{}Feat_KBest_chi2/'.format(i))
