@@ -142,11 +142,12 @@ def NFoldCrossVal(X, y, sOutDir, numFolds = 5):
 #NFoldCrossVal(X, y, '5FoldModel1NN.csv')
 
 #%%
-dfModel1 = pd.read_csv("../data/SelectedFeatures/Model1_50Feat_KBest_f_classif.csv")
-dfModel1 = pd.read_csv("../data/SelectedFeatures/Model1_50Feat_KBest_f_classif.csv")
-
-
-X = dfModel1.drop(['Ever used ilicit drugs'], axis='columns')
-y = pd.DataFrame(dfModel1['Ever used ilicit drugs'])
+for i in range(0,150,10):
+    dfModel1 = pd.read_csv("../data/SelectedFeatures/Model1_{}Feat_KBest_chi2.csv".format(i))
+    dfModel1 = pd.read_csv("../data/SelectedFeatures/Model1_{}Feat_KBest_chi2.csv".format(i))
     
-NFoldCrossVal(X, y, '5FoldModel1NN_100Feat_KBest_c_classif.csv')
+    
+    X = dfModel1.drop(['Ever used ilicit drugs'], axis='columns')
+    y = pd.DataFrame(dfModel1['Ever used ilicit drugs'])
+        
+    NFoldCrossVal(X, y, '{}features/5FoldModel1NN_{}Feat_KBest_chi2.csv'.format(i))

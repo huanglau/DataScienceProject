@@ -143,12 +143,12 @@ X = dfModel1.drop(['Ever used ilicit drugs'], axis='columns')
 #for i in range(0, 150, 10):
 #    KBestFeaturesNames, XFeatures, data = KBest (X, y, numFeat=i,
 #                                             sOutDir='../data/SelectedFeatures/Model1_{}Feat_KBest_f_classif.csv'.format(i), score_func=chi2)
-for i in range(0, 150, 10):
-    KBestFeaturesNames, XFeatures, data = KBest (X, y, numFeat=i,
-                                             sOutDir='../data/SelectedFeatures/Model1_{}Feat_KBest_chi2.csv'.format(i), score_func=chi2)
+#for i in range(0, 150, 10):
+#    KBestFeaturesNames, XFeatures, data = KBest (X, y, numFeat=i,
+#                                             sOutDir='../data/SelectedFeatures/Model1_{}Feat_KBest_chi2.csv'.format(i), score_func=chi2)
 
 
-#rfecv = BackwardFSCV(X, y)
+rfecv = BackwardFSCV(X, y)
 
 #%%  Backwards feature selection, wrapper method
 
