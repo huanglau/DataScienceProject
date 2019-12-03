@@ -99,10 +99,10 @@ def preprocessingIlicitDrug(data, lDemographics, sOutDir = 'data/Model1.csv', Dr
     # fills in Nans with 0 for non-answer
     pdQuestions = pdQuestions.fillna(value = 0)
 
-    # process dependent variables, make dummies
-    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lCatagorical if col in pdQuestions.columns], drop_first=True, dummy_na=True)
-    # convert y/n answers to dummies lYN
-    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lYN if col in pdQuestions.columns],  drop_first=True, dummy_na=True)
+#    # process dependent variables, make dummies
+#    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lCatagorical if col in pdQuestions.columns], drop_first=True, dummy_na=True)
+#    # convert y/n answers to dummies lYN
+#    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lYN if col in pdQuestions.columns],  drop_first=True, dummy_na=True)
 
     # save as csv
     # stack the two pandas into one file
@@ -117,5 +117,5 @@ def preprocessingIlicitDrug(data, lDemographics, sOutDir = 'data/Model1.csv', Dr
     return pdIlicitDrugEverUsed, pdQuestions
 
 # run to output cleaned data
-preprocessingIlicitDrug(data, lDemographics, sOutDir = 'data/Model1WOStratum.csv', DropAllDrugs = False)
-preprocessingIlicitDrug(data, lDemographics, sOutDir = 'data/Model1NoDrugQsInXWOStratum.csv', DropAllDrugs = True)
+preprocessingIlicitDrug(data, lDemographics, sOutDir = 'data/Model1WONoDummies.csv', DropAllDrugs = False)
+preprocessingIlicitDrug(data, lDemographics, sOutDir = 'data/Model1NoDrugQsInXWONoDummies.csv', DropAllDrugs = True)

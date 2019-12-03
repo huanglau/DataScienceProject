@@ -18,7 +18,7 @@ if os.getcwd not in sys.path:
 
 """
 Extensions to thek-Means Algorithm for ClusteringLarge Data Sets with Categorical Values
-
+https://link.springer.com/article/10.1023/A:1009769707641
 K -means doesn't work for catagorical data. k-modes does
 
 https://pypi.org/project/kmodes/

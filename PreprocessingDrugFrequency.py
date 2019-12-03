@@ -96,10 +96,10 @@ def preprocessingDrugFreq(data, lDemographics, sOutDir, DropAllDrugs = False):
     #clean out rows (persons) with more than half the answers missing
     pdQuestions = pdQuestions.dropna(thresh=int(len(pdQuestions.columns)/2), axis='rows')
 
-    # process dependent variables, make dummies
-    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lCatagorical if col in pdQuestions.columns], drop_first=True, dummy_na=True)
-    # convert y/n answers to dummies lYN
-    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lYN if col in pdQuestions.columns],  drop_first=True, dummy_na=True)
+#    # process dependent variables, make dummies
+#    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lCatagorical if col in pdQuestions.columns], drop_first=True, dummy_na=True)
+#    # convert y/n answers to dummies lYN
+#    pdQuestions = pd.get_dummies(pdQuestions, prefix_sep = "_", columns = [col for col in lYN if col in pdQuestions.columns],  drop_first=True, dummy_na=True)
 
     # save as csv
     # stack the two pandas into one file
@@ -115,5 +115,5 @@ def preprocessingDrugFreq(data, lDemographics, sOutDir, DropAllDrugs = False):
     return pdFreq, pdQuestions
 
 # run to output cleaned data
-preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2WOStratum.csv', DropAllDrugs = False)
-preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2NoDrugQsInXWOStratum.csv', DropAllDrugs = True)
+preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2WONoDummies.csv', DropAllDrugs = False)
+preprocessingDrugFreq(data, lDemographics, sOutDir = 'data/Model2NoDrugQsInXWONoDummies.csv', DropAllDrugs = True)
