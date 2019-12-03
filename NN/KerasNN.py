@@ -81,7 +81,7 @@ def fcNet(iInputSize = 100):
 #    model.add(Dense(128, activation='relu')) 
     model.add(Dense(128, activation='relu')) 
     
-    model.add(Dense(8, activation='relu'))
+#    model.add(Dense(8, activation='relu'))
     model.add(Dense(1, activation='sigmoid'))
     return model
 
@@ -110,14 +110,14 @@ def NFoldCrossVal(X, y, sOutDir, numFolds = 5):
         
         # compile model
         from keras.optimizers import Adam
-        opt = Adam(lr=1e-4)
+        opt = Adam(lr=1e-3)
         model.compile(loss='binary_crossentropy', optimizer=opt,
                   metrics=['accuracy', Recall, Precision])
     
         Xtrain = np.array(Xtrain)
         ytrain = np.reshape(np.array(ytrain, dtype=np.int8), (-1))
-        history = model.fit(Xtrain, ytrain, epochs=300, batch_size=5**10,
-                  class_weight = {0:1, 1:15}, validation_data = (Xval, yval))
+        history = model.fit(Xtrain, ytrain, epochs=150, batch_size=500,
+                  class_weight = {0:1, 1:10}, validation_data = (Xval, yval))
         
         # get prediction son test set
         ypred = model.predict(Xtest)
@@ -131,24 +131,58 @@ def NFoldCrossVal(X, y, sOutDir, numFolds = 5):
                                                 'Error Rate':ErrorRate}, ignore_index=True)
         Error.SaveTrainingHistory(os.path.join(sOutDir, "{}foldhistory".format(fold)), model, history)
     pdConf.to_csv(os.path.join(sOutDir, 'ErrorMetrics.csv'), index=False)   
-    
-##%%    
-#dfModel1 = pd.read_csv("../data/Model1WOStratum.csv")
-#dfModel1 = pd.read_csv("../data/Model1WOStratum.csv")
-#
-#
-#X = dfModel1.drop(['Ever used ilicit drugs'], axis='columns')
-#y = pd.DataFrame(dfModel1['Ever used ilicit drugs'])
-#    
-#NFoldCrossVal(X, y, '5FoldModel1NN.csv')
+    means = pdConf.mean()
+    means.to_csv(os.path.join(sOutDir, 'means'), index=False)
+    return means
 
-#%%
+def ModelTrain(dfModelData, sXColumn, sOutDir):
+    """ reads in a pandas dataframe. Removes one column. This column will be the Y data. Then trains a
+    NN using this data. OUtputs error metrics to sOUtDir
+    """
+    X = dfModelData.drop([sXColumn], axis='columns')
+    y = pd.DataFrame(dfModelData[sXColumn])
+    
+    pdConf = NFoldCrossVal(X, y, sOutDir)
+    return pdConf
+
+#%% model 1, chi2 features
+pdConfNFeatures = pd.DataFrame(columns = ['Fold', 'FNR', 'FPR', 'auc', 'optimal threshold'])
+    
 for i in range(10,140,10):
     dfModel1 = pd.read_csv("../data/SelectedFeatures/Model1_{}Feat_KBest_chi2.csv".format(i))
-    dfModel1 = pd.read_csv("../data/SelectedFeatures/Model1_{}Feat_KBest_chi2.csv".format(i))
     
+    pdConf = ModelTrain(dfModel1, 'Ever used ilicit drugs', 'Model1/5FoldModel1NN_{}Feat_KBest_chi2/'.format(i))
+    pdConfNFeatures.append(pdConf, ignore_index=True)
+pdConfNFeatures.to_csv('Model1/NFoldError.csv', index=False)
+
+
+#%% model 1, RFECV recursive feature elimination cross val
+dfModel1 = pd.read_csv("../data/SelectedFeatures/Model1WOStratum_RFECV135.csv")
+ModelTrain(dfModel1, 'Ever used ilicit drugs', 'Model1/5FoldModel1NN_RFECV/')
+#X = dfModel1.drop(['Unnamed: 0'], axis='columns')
+#y = pd.read_csv("../data/SelectedFeatures/Model1_10Feat_KBest_chi2.csv")
+#y = pd.DataFrame(y['Ever used ilicit drugs'])
+#
+#pdConf = NFoldCrossVal(X, y, 'Model1/5FoldModel1NN_RFECV/')
+
+#dfModel1 = pd.read_csv("../data/SelectedFeatures/Model1_135Feat_KBest_chi2.csv")
+#ModelTrain(dfModel1, 'Ever used ilicit drugs', 'Model1/5FoldModel1NN_RFECV/')
+
+#%% model2
+pdConfNFeatures = pd.DataFrame(columns = ['Fold', 'FNR', 'FPR', 'auc', 'optimal threshold'])
     
-    X = dfModel1.drop(['Ever used ilicit drugs'], axis='columns')
-    y = pd.DataFrame(dfModel1['Ever used ilicit drugs'])
-        
-    NFoldCrossVal(X, y, '5FoldModel1NN_{}Feat_KBest_chi2/'.format(i))
+for i in range(10,130,10):
+    dfModel2 = pd.read_csv("../data/SelectedFeatures/Model2_{}Feat_KBest_chi2.csv".format(i))
+
+    pdConf = ModelTrain(dfModel2, 'Freq Drug Use', 'Model2/5FoldModel1NN_{}Feat_KBest_chi2/'.format(i))    
+    pdConfNFeatures.append(pdConf, ignore_index=True)
+pdConfNFeatures.to_csv('Model2/NFoldError.csv', index=False)
+
+#%% model 2, RFECV recursive feature elimination cross val
+dfModel2 = pd.read_csv("../data/SelectedFeatures/Model2WOStratum_RFECV118.csv")
+#X = dfModel2
+#y = pd.read_csv("../data/SelectedFeatures/Model2_10Feat_KBest_chi2.csv")
+#y = pd.DataFrame(y['Ever used ilicit drugs'])
+#
+#pdConf = NFoldCrossVal(X, y, 'Model1/5FoldModel2NN_RFECV/')#dfModel2 = pd.read_csv("../data/SelectedFeatures/Model2WOStratum_RFECV118.csv")
+ModelTrain(dfModel2, 'Freq Drug Use', 'Model2/5FoldModel1NN_RFECV/')

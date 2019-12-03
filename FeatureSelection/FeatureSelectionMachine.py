@@ -10,7 +10,8 @@ import os
 import sys
 import sklearn
 import numpy as np
-
+import pickle
+import matplotlib.pyplot as plt
 
 # add current directory to path if not already in it
 #if os.getcwd not in sys.path:
@@ -105,7 +106,7 @@ from sklearn.datasets import make_classification
                            #n_redundant=2, n_repeated=0, n_classes=8,
                            #n_clusters_per_class=1, random_state=0)
 
-def BackwardFSCV(X, y):
+def BackwardFSCV(X, y, sOutDir):
     """
     Cross validation using bakwards feature selection. Does this over 5 folds and
     over multiple numbers of features. I.e. select the best 5 features, best 10 features, 
@@ -125,20 +126,42 @@ def BackwardFSCV(X, y):
     print("Optimal number of features : %d" % rfecv.n_features_)
     
        # Plot number of features VS. cross-validation scores
-    plt.figure()
-    plt.xlabel("Number of features selected")
-    plt.ylabel("Cross validation score (nb of correct classifications)")
+    fig = plt.figure()
+
+    plt.xlabel("Number of features selected", figure=fig)
+    plt.ylabel("Cross validation score (nb of correct classifications)", figure=fig)
     
-    plt.plot(np.arange(0, np.shape(X)[1]+1, 5), rfecv.grid_scores_)
+    plt.plot(np.flip(np.arange(133, 0, -15)), rfecv.grid_scores_[1:], figure=fig)
+    fig.savefig('FeatureSelectionRFECV.png', dpi = 300)
     plt.show()
+    
+    with open('objs.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        pickle.dump([rfecv], f)
+    
+    # drop variables not selected
+    XFeatures = X.drop(X.columns[rfecv.support_==False], axis='columns')
+
+    XFeatures.to_csv(sOutDir)
     return rfecv
+#%%
+#import pandas as pd
+#import os
+#import sys
+#import sklearn
+#import numpy as np
+#import pickle
+#import matplotlib.pyplot as plt
+#rfecv = pickle.load( open( "/home/vector/Documents/Western/Courses/CS4414/project/data/DataScienceProject/FeatureSelection/RFECV_Model2.pkl", "rb" ) )
+#plt.plot(np.flip(np.arange(133, 0, -15)), rfecv[0].grid_scores_[1:])
+#plt.xlabel("Number of features selected")
+#plt.ylabel("Cross validation score (nb of correct classifications)")
+
 
 #%% Load data 
-dfModel1 = pd.read_csv("../data/Model1WOStratum.csv")
-
-y = pd.DataFrame(dfModel1['Ever used ilicit drugs'])
-X = dfModel1.drop(['Ever used ilicit drugs'], axis='columns')
-
+#dfModel1 = pd.read_csv("../data/Model1WOStratum.csv")
+#
+#y = pd.DataFrame(dfModel1['Ever used ilicit drugs'])
+#X = dfModel1.drop(['Ever used ilicit drugs'], axis='columns')
 
 #for i in range(0, 150, 10):
 #    KBestFeaturesNames, XFeatures, data = KBest (X, y, numFeat=i,
@@ -147,8 +170,12 @@ X = dfModel1.drop(['Ever used ilicit drugs'], axis='columns')
 #    KBestFeaturesNames, XFeatures, data = KBest (X, y, numFeat=i,
 #                                             sOutDir='../data/SelectedFeatures/Model1_{}Feat_KBest_chi2.csv'.format(i), score_func=chi2)
 
+dfModel2 = pd.read_csv("../data/Model2WOStratum.csv")
 
-rfecv = BackwardFSCV(X, y)
+y = pd.DataFrame(dfModel2['Freq Drug Use'])
+X = dfModel2.drop(['Freq Drug Use'], axis='columns')
+sOutDir = "../data/SelectedFeatures/Model2WOStratum_RFECV135.csv"
+rfecv = BackwardFSCV(X, y, sOutDir)
 
 #%%  Backwards feature selection, wrapper method
 
