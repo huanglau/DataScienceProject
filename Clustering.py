@@ -27,9 +27,9 @@ https://pypi.org/project/kmodes/
 # load data for model1
 dfModel1 =  pd.read_csv("../data/SelectedFeatures/Model1WOStratum_RFECV135.csv")
 #ModelTrain(dfModel1, 'Ever used ilicit drugs', 'Model1/5FoldModel1NN_RFECV/')
-X = dfModel1
-y = pd.read_csv("/data/SelectedFeatures/Model1_10Feat_KBest_chi2.csv")
-y = pd.DataFrame(y['Ever used ilicit drugs'])
+X = dfModel1.drop(['Ever used ilicit drugs'], axis='columns')
+#y = pd.read_csv("../data/SelectedFeatures/Model1_10Feat_KBest_chi2.csv")
+#y = pd.DataFrame(y['Ever used ilicit drugs'])
 
 km = KModes(n_clusters=2, init='Huang', n_init=5, verbose=1)
 #X = dfModel1.drop(['Ever used ilicit drugs'], axis='columns')
