@@ -349,6 +349,27 @@ predictors = df[ ['age', 'sex', 'bmi', 'race7', 'q67', 'q66', 'safetyComposite',
 
 print("shape predictors\n", predictors.shape)
 
+
+#adding in bmi and weight
+#numeric_variables = ['bmi']
+
+#subtract mean
+#predictors.loc[:, numeric_variables] = (predictors.loc[:, numeric_variables] - predictors.loc[:, numeric_variables].mean())
+
+#divide by std dev
+#predictors.loc[:, numeric_variables] = (predictors.loc[:, numeric_variables] / predictors.loc[:, numeric_variables].max())
+
+
+
+#subtract mean
+predictors.loc[:,'bmi'] = (predictors.loc[:,'bmi'] - predictors.loc[:,'bmi'].min())
+
+#divide by std dev
+predictors.loc[:,'bmi'] = (predictors.loc[:,'bmi'] / predictors.loc[:,'bmi'].max())
+
+print("summary for bmi", predictors.loc[:,'bmi'].describe())
+
+
         
 #fill in remaining missingness with 0s for the predictors only 
 predictors = predictors.fillna(value = 0)
@@ -386,10 +407,13 @@ print("shape of final df for model 2", manual2.shape)
 # print(manual1.isnull().sum())
 # print(manual2.isnull().sum())
 
+#print(manual1.head(5))
+
+#print(manual2.head(5))
 
 #export df
-manual1.to_csv(r'/Users/jkueper/Documents/PhD/Courses/Fall2019-CS/IntroDataScience/FinalProject/dfManual1', index = False) 
+manual1.to_csv(r'  /dfManual1', index = False) 
 
-manual2.to_csv(r'/Users/jkueper/Documents/PhD/Courses/Fall2019-CS/IntroDataScience/FinalProject/dfManual2', index = False)
+manual2.to_csv(r' /dfManual2', index = False)
 
 
