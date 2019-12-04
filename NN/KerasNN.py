@@ -165,18 +165,18 @@ def ModelTrain(dfModelData, sXColumn, sOutDir):
 #
 #pdConf = NFoldCrossVal(X, y, 'Model1/5FoldModel1NN_RFECV/')
 
-#dfModel1 = pd.read_csv("../data/SelectedFeatures/Model1_135Feat_KBest_chi2.csv")
-#ModelTrain(dfModel1, 'Ever used ilicit drugs', 'Model1/5FoldModel1NN_RFECV/')
+dfModel1 = pd.read_csv("../data/SelectedFeatures/Model1_135Feat_KBest_chi2.csv")
+ModelTrain(dfModel1, 'Ever used ilicit drugs', 'Model1/5FoldModel1NN_RFECV/')
 
 #%% model2
-pdConfNFeatures = pd.DataFrame(columns = ['Fold', 'FNR', 'FPR', 'auc', 'optimal threshold'])
-    
-for i in range(90,130,10):
-    dfModel2 = pd.read_csv("../data/SelectedFeatures/Model2_{}Feat_KBest_chi2.csv".format(i))
-
-    pdConf = ModelTrain(dfModel2, 'Freq Drug Use', 'Model2/5FoldModel1NN_{}Feat_KBest_chi2/'.format(i))    
-    pdConfNFeatures.append(pdConf, ignore_index=True)
-pdConfNFeatures.to_csv('Model2/NFoldError.csv', index=False)
+#pdConfNFeatures = pd.DataFrame(columns = ['Fold', 'FNR', 'FPR', 'auc', 'optimal threshold'])
+#    
+#for i in range(90,130,10):
+#    dfModel2 = pd.read_csv("../data/SelectedFeatures/Model2_{}Feat_KBest_chi2.csv".format(i))
+#
+#    pdConf = ModelTrain(dfModel2, 'Freq Drug Use', 'Model2/5FoldModel1NN_{}Feat_KBest_chi2/'.format(i))    
+#    pdConfNFeatures.append(pdConf, ignore_index=True)
+#pdConfNFeatures.to_csv('Model2/NFoldError.csv', index=False)
 
 #%% model 2, RFECV recursive feature elimination cross val
 dfModel2 = pd.read_csv("../data/SelectedFeatures/Model2WOStratum_RFECV118.csv")
