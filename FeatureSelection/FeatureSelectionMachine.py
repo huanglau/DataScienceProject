@@ -147,9 +147,9 @@ def BackwardFSCV(X, y, sOutDir, step=1, min_features_to_select = 10, kFolds = 5)
     return dfAllData
 
 
-def Backwards(dfModel, sXColumn , sOutDir):
-    y = pd.DataFrame(dfModel[sXColumn])
-    X = dfModel.drop([sXColumn], axis='columns')
+def Backwards(dfModel, syColumn , sOutDir):
+    y = pd.DataFrame(dfModel[syColumn])
+    X = dfModel.drop([syColumn], axis='columns')
     BackwardFSCV(X, y, sOutDir)
     
     
