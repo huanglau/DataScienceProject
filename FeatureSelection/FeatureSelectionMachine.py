@@ -116,7 +116,7 @@ def BackwardFSCV(X, y, sOutDir, step=1, min_features_to_select = 10, kFolds = 5)
     # The "accuracy" scoring is proportional to the number of correct
     # classifications
     rfecv = RFECV(estimator=LogReg, step=step,
-                  scoring='accuracy', verbose = True, n_jobs = -1)
+                  scoring='accuracy', verbose = True, n_jobs = 3)
     rfecv.fit(X, y)
     
     print("Optimal number of features : %d" % rfecv.n_features_)
@@ -137,8 +137,14 @@ def BackwardFSCV(X, y, sOutDir, step=1, min_features_to_select = 10, kFolds = 5)
     # drop variables not selected
     XFeatures = X.drop(X.columns[rfecv.support_==False], axis='columns')
 
-    XFeatures.to_csv(os.path.join(sOutDir, 'RFECV.csv'))
-    return rfecv
+    # combine with y data
+    dfAllData = pd.concat([y, XFeatures], axis = 1)
+    #clean out rows (persons) with more than half the answers missing
+#    dfAllData = dfAllData.dropna(thresh=int(len(pdQuestions.columns)/2), axis='rows')
+    dfAllData.to_csv(os.path.join(sOutDir, 'RFECV.csv'), index=False)  
+
+#    XFeatures.to_csv(os.path.join(sOutDir, 'RFECV.csv'), index=False)
+    return dfAllData
 
 
 def Backwards(dfModel, sXColumn , sOutDir):

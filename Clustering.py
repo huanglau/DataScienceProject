@@ -23,9 +23,18 @@ K -means doesn't work for catagorical data. k-modes does
 
 https://pypi.org/project/kmodes/
 """
+dfModel1 =  pd.read_csv("data/SelectedFeatures/Model1/RFECV.csv") # 81
+dfModel1 =  pd.read_csv("data/SelectedFeatures/Model1NoDrugQs/RFECV.csv") # 83
+dfModel1 =  pd.read_csv("data/SelectedFeatures/Model1NoDummies/RFECV.csv")# 63
+dfModel1 =  pd.read_csv("data/SelectedFeatures/Model1NoDrugQsNoDummies/RFECV.csv") # 54
+dfModel1 =  pd.read_csv("data/SelectedFeatures/Model2/RFECV.csv") # 98
+dfModel1 =  pd.read_csv("data/SelectedFeatures/Model2NoDrugQs/RFECV.csv") # 98
+dfModel1 =  pd.read_csv("data/SelectedFeatures/Model2NoDummies/RFECV.csv")# 57
+dfModel1 =  pd.read_csv("data/SelectedFeatures/Model2NoDrugQsNoDummies/RFECV.csv")# 56
+
 #%%
 # load data for model1
-dfModel1 =  pd.read_csv("../data/SelectedFeatures/Model1WOStratum_RFECV135.csv")
+dfModel1 =  pd.read_csv("data/SelectedFeatures/Model1/RFECV.csv")
 #ModelTrain(dfModel1, 'Ever used ilicit drugs', 'Model1/5FoldModel1NN_RFECV/')
 X = dfModel1.drop(['Ever used ilicit drugs'], axis='columns')
 #y = pd.read_csv("../data/SelectedFeatures/Model1_10Feat_KBest_chi2.csv")
