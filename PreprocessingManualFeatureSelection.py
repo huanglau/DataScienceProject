@@ -364,14 +364,32 @@ print("shape outcomes", outcomesWeight.shape)
 
 dfManual = pd.concat([outcomesWeight, predictors], axis = 1)
 
-print("shape of final df", dfManual.shape)
-print(dfManual.head(5))
-print(dfManual.isnull().sum())
+print("shape of df before remove for each outcome", dfManual.shape)
+
+
+#create df for model 1 outcome
+dfManual1 = dfManual.drop(['modTwoOutcome'], axis = 'columns')
+print("manual 1 before drop rows", dfManual1.shape)
+manual1 = dfManual1.dropna(axis = 0, how = 'any')
+
+
+#create df for model 2 outcome
+dfManual2 = dfManual.drop(['modOneOutcome'], axis = 'columns')
+print("manual 2 before drop rows", dfManual2.shape)
+manual2 = dfManual2.dropna(axis = 0, how = 'any')
+
+
+
+print("shape of final df for model 1", manual1.shape)
+print("shape of final df for model 2", manual2.shape)
+# print("should be no more NA")
+# print(manual1.isnull().sum())
+# print(manual2.isnull().sum())
 
 
 #export df
-dfManual.to_csv(r'/Users/jkueper/Documents/PhD/Courses/Fall2019-CS/IntroDataScience/FinalProject/dfManual', index = False) 
+manual1.to_csv(r'/Users/jkueper/Documents/PhD/Courses/Fall2019-CS/IntroDataScience/FinalProject/dfManual1', index = False) 
 
-
+manual2.to_csv(r'/Users/jkueper/Documents/PhD/Courses/Fall2019-CS/IntroDataScience/FinalProject/dfManual2', index = False)
 
 
