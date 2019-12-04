@@ -6,7 +6,8 @@ import scipy.stats as stats
 
 
 #import data - change filename in future
-df = pd.read_csv('dfManual')
+df1 = pd.read_csv('dfManual1')
+df2 = pd.read_csv('dfManual2')
 
 #note this script assumes names: 'modOneOutcome', 'modTwoOutcome'
 # one is illicit drugs; two is tobacco and alcohol 
@@ -44,8 +45,8 @@ validationSize = 8500
 #there is some error introduced because only getting so many  decimals
 #we could recover all decimals; the data become really large though (computing shape of data took noticeable time) 
 
-df['weightMultiplied'] = df['weight'] * 100
-
+df1['weightMultiplied'] = df1['weight'] * 100
+df2['weightMultiplied'] = df2['weight'] * 100
 
 #check 
 # print("multiplied weights", df['weightMultiplied'].describe())
@@ -56,16 +57,23 @@ df['weightMultiplied'] = df['weight'] * 100
 # SEPARATE OUTCOMES FROM PREDICTORS
 
 #extract outcomes - names may differ
-y = df[['weightMultiplied', 'modOneOutcome', 'modTwoOutcome']]
+y1 = df1[['weightMultiplied', 'modOneOutcome']]
+y2 = df2[['weightMultiplied', 'modTwoOutcome']]
 
 #extract predictors
-X = df.drop(['modOneOutcome', 'modTwoOutcome'], axis = 'columns')
+X1 = df1.drop(['modOneOutcome'], axis = 'columns')
+X2 = df2.drop(['modTwoOutcome'], axis = 'columns')
 
-#get training set
-Xtrain, XRemaining, ytrain, yRemaining = train_test_split(X, y, test_size = (testSize + validationSize), random_state = 0)
-
+#get training set for illicit drug use outcome
+Xtrain1, XRemaining1, ytrain1, yRemaining1 = train_test_split(X1, y1, test_size = (testSize + validationSize), random_state = 0)
 #split remaning into test and validation 
-Xvalidate, Xtest, yvalidate, ytest = train_test_split(XRemaining, yRemaining, test_size = testSize, random_state = 0)
+Xvalidate1, Xtest1, yvalidate1, ytest1 = train_test_split(XRemaining1, yRemaining1, test_size = testSize, random_state = 0)
+
+
+#get training set for alc and tobacco use outcome
+Xtrain2, XRemaining2, ytrain2, yRemaining2 = train_test_split(X2, y2, test_size = (testSize + validationSize), random_state = 0)
+#split remaning into test and validation 
+Xvalidate2, Xtest2, yvalidate2, ytest2 = train_test_split(XRemaining2, yRemaining2, test_size = testSize, random_state = 0)
 
 #check sizes 
 #print("SIZES")
@@ -87,37 +95,36 @@ Xvalidate, Xtest, yvalidate, ytest = train_test_split(XRemaining, yRemaining, te
 
 #multiply training set by weights
 
-XtrainDuplicate = Xtrain.loc[Xtrain.index.repeat(Xtrain.weightMultiplied)]
+XtrainDuplicate1 = Xtrain1.loc[Xtrain1.index.repeat(Xtrain1.weightMultiplied)]
+XtrainDuplicate2 = Xtrain2.loc[Xtrain2.index.repeat(Xtrain2.weightMultiplied)]
 #print("shape x duplidated", XtrainDuplicate.shape)
 
-ytrainDuplicate = ytrain.loc[ytrain.index.repeat(ytrain.weightMultiplied)]
+ytrainDuplicate1 = ytrain1.loc[ytrain1.index.repeat(ytrain1.weightMultiplied)]
+ytrainDuplicate2 = ytrain2.loc[ytrain2.index.repeat(ytrain2.weightMultiplied)]
 #print("shape y duplidated", ytrainDuplicate.shape)
 
 
-#export the dfs
-Xtrain.to_csv(r' ', index = False)
-ytrain.to_csv(r' ', index = False)
-XtrainDuplicate.to_csv(r' ', index = False)
-ytrainDuplicate.to_csv(r' ', index = False)
-Xvalidate.to_csv(r' ', index = False)
-yvalidate.to_csv(r' ', index = False)
-Xtest.to_csv(r' ', index = False)
-ytest.to_csv(r' ', index = False) 
+#export the dfs for illicit drug use
+Xtrain1.to_csv(r' ', index = False)
+ytrain1.to_csv(r' ', index = False)
+XtrainDuplicate1.to_csv(r' ', index = False)
+ytrainDuplicate1.to_csv(r' ', index = False)
+Xvalidate1.to_csv(r' ', index = False)
+yvalidate1.to_csv(r' ', index = False)
+Xtest1.to_csv(r' ', index = False)
+ytest1.to_csv(r' ', index = False) 
+
+#for alcohol and tobacco use
+Xtrain2.to_csv(r' ', index = False)
+ytrain2.to_csv(r' ', index = False)
+XtrainDuplicate2.to_csv(r' ', index = False)
+ytrainDuplicate2.to_csv(r' ', index = False)
+Xvalidate2.to_csv(r' ', index = False)
+yvalidate2.to_csv(r' ', index = False)
+Xtest2.to_csv(r' ', index = False)
+ytest2.to_csv(r' ', index = False) 
 
 
-
-
-
-
-#next steps
-
-#train models on
-# ytrain - no duplicated
-# ytrainDuplicate - duplicated by factor of 100 * weight (may change)
-
-#select model on validation set (Xvalidate, yvalidate)
-
-#test best model on testing set (Xtest, ytest) 
 
 
 
