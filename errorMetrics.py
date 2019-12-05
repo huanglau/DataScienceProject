@@ -66,6 +66,18 @@ def GenAUC(npPred, npTruth):
     fpr, tpr, thresholds = metrics.roc_curve(npTruth, npPred, pos_label =1)
     return metrics.auc(fpr, tpr), fpr, tpr, thresholds
 
+def PlotAUC(npPred, npTruth, sOutDir):
+    """ Creates AUC plots.
+    """
+    fpr, tpr, thresholds = metrics.roc_curve(npTruth, npPred, pos_label =1)
+
+    plt.plot(fpr, tpr)
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.savefig(sOutDir)
+    plt.show()
+
+  
 def OptimalThreshAUC(fpr, tpr, thresholds):
     """ returns the optimal threshold value in a binary classification
     when using an ROC caluclator
@@ -128,7 +140,7 @@ def CalcErrorRates(npResults, npTruthValues, pdConf, sPatID, sSlideID, lClasses)
                                 'optimal threshold':optThresh}, ignore_index=True)  
 
     
-def SaveTrainingHistory(sOutDir, Model, history):
+def SaveTrainingHistory(sOutDir, history):
     """
     Saves training information to sOutDir. 
     Also does some error metrics

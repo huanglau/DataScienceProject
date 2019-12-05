@@ -39,11 +39,11 @@ def kmodesClusters(dfModel, yColumn, n_clusters = 2):
     return clusters
 
 #%%
-def kModeClusters(sOutDir):
+def kModeClusters(sOutDir, n_clusters):
     """
     """
     pdConf = pd.DataFrame(columns = ['data', 'accuracy', 'f1', 'recall', 'precision' ])
-    dfModel =  pd.read_csv("data/SelectedFeatures/Model1/RFECV.csv")
+#    dfModel =  pd.read_csv("data/SelectedFeatures/Model1/RFECV.csv")
     lModels = ["data/SelectedFeatures/Model1/RFECV.csv",
                "data/SelectedFeatures/Model1NoDrugQs/RFECV.csv",
                "data/SelectedFeatures/Model1NoDummies/RFECV.csv",
@@ -67,13 +67,12 @@ def kModeClusters(sOutDir):
             pdConf.to_csv(sOutDir)
             print("{} file not found!".format(model))
                 
-        clusters = kmodesClusters(dfModel,lyColumns[index])
+        clusters = kmodesClusters(dfModel,lyColumns[index], n_clusters)
         y = dfModel[lyColumns[index]].values
 
         # save predictions
-        dfPredictions = pd.DataFrame({'predictions':clusters, 'truth':y.flatten()}, axis = 1)
-
-        dfPredictions.to_csv(os.path.join(lModels, 'Predictions.csv'), index=False)    
+        dfPredictions = pd.DataFrame({'predictions':clusters, 'truth':y.flatten()})
+        dfPredictions.to_csv(os.path.join(os.path.split(model)[0], 'ClusteringPredictions.csv'), index=False)    
 
         # get error metrics
         TN, FP, FN, TP  = Error.ConfMatrix(y.flatten(), clusters > 0.5)
@@ -82,4 +81,7 @@ def kModeClusters(sOutDir):
                                             'recall': recall, 'precision':precision}, ignore_index=True)
     pdConf.to_csv(sOutDir)
 
-kModeClusters('clusteringErrorMetrics.csv')
+#kModeClusters('clusteringErrorMetrics.csv', 2)
+kModeClusters('clusteringErrorMetrics1.csv', 1)
+kModeClusters('clusteringErrorMetrics3.csv', 3)
+kModeClusters('clusteringErrorMetrics4.csv', 4)

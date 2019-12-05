@@ -1,0 +1,2 @@
+,Model,FNR,FPR,auc,f1,recall,precision,Error Rate
+0,../data/dfManual,0.0,1.0,0.5,0.2091476929276647,0.11678667866786678,1.0,0.8832133213321333
