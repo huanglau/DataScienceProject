@@ -156,3 +156,25 @@ plt.savefig('Model2NNAUCs.png')
 plt.show()
 
 
+
+
+#%% Testing AUCS Model1
+ypred = np.load('testingPredTruth/Preds_LR_M1_TEST.npy')
+ytruth = np.load('testingPredTruth/Truth_LR_M1_TEST.npy')
+GenAUCPlotsB(ypred, ytruth, label='')
+
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.savefig('Model1_LR_M1_Test_AUCs.png')
+plt.show()
+
+#%% Testing AUCS Model2
+ypred = np.load('testingPredTruth/Preds_Forest_M2_TEST.npy')
+ytruth = np.load('testingPredTruth/Truth_Forest_M2_TEST.npy')
+GenAUCPlotsB(ypred, ytruth, label='')
+
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.savefig('Model2_Forest_Test_AUCs.png')
+plt.show()
+

@@ -1,0 +1,53 @@
+age  &-0.12996133 \\ \ hline
+sex  &0.14007833 \\ \ hline
+grade  &0.11656388 \\ \ hline
+race4  &0.08151893 \\ \ hline
+race7  &0.0656219 \\ \ hline
+bmi  &-0.93292594 \\ \ hline
+q67  &-0.01044678 \\ \ hline
+q66  &0.16914702 \\ \ hline
+sexid  & -0.01044678 \\ \ hline
+sexid2  &0.3309728 \\ \ hline
+sexpart  &-0.16576325 \\ \ hline
+sexpart2  &0.26947381 \\ \ hline
+q8  &-0.10515266 \\ \ hline
+q9  &0.18047593 \\ \ hline
+q10  &0.13520829 \\ \ hline
+q12  &0.14787795 \\ \ hline
+q15  &0.09327482 \\ \ hline
+q16  &0.11246571 \\ \ hline
+q17  & 0.13689193 \\ \ hline
+q18  &0.06236822 \\ \ hline
+q19  & -0.03475479 \\ \ hline
+q21  & -0.04417338 \\ \ hline
+q22  &0.0627582 \\ \ hline
+q23  &-0.07786692 \\ \ hline
+q24  &-0.00945394 \\ \ hline
+q25  & -0.29589541 \\ \ hline
+q26  & -0.20502565 \\ \ hline
+q27  &0.01084526 \\ \ hline
+q28  &0.18809358 \\ \ hline
+q58  & -0.56045897 \\ \ hline
+q59  &-0.56977652 \\ \ hline
+q60  & -0.02605732 \\ \ hline
+q61  &0.20298169 \\ \ hline
+q62  & -0.00485803 \\ \ hline
+q63  & -0.28480446 \\ \ hline
+q64  &0.15468964 \\ \ hline
+q68  &-0.04774481 \\ \ hline
+q69  & -0.06963265 \\ \ hline
+q72  &0.05324012 \\ \ hline
+q74  &0.03449686 \\ \ hline
+q76  &0.0505714 \\ \ hline
+q78  &-0.05735116 \\ \ hline
+q79  &-0.01547327 \\ \ hline
+q81  &0.02161934 \\ \ hline
+q85  & -0.07199273 \\ \ hline
+q88  &0.00584107 \\ \ hline
+q89  &0.01228097 \\ \ hline
+qwater  &0.031487 \\ \ hline
+qfoodallergy  &-0.02878704 \\ \ hline
+qindoortanning  &0.14119372 \\ \ hline
+qsunburn  &0.05462804 \\ \ hline
+qconcentrating  &-0.24023756 \\ \ hline
+qspeakenglish0.24237949 \\ \ hline
