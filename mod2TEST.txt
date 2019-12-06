@@ -1,0 +1,71 @@
+test data X (4444, 55)
+test data y (4444, 1)
+
+ Model Type: RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
+                       max_depth=10, max_features=10, max_leaf_nodes=None,
+                       min_impurity_decrease=0.0, min_impurity_split=None,
+                       min_samples_leaf=1, min_samples_split=2,
+                       min_weight_fraction_leaf=0.0, n_estimators=400,
+                       n_jobs=None, oob_score=False, random_state=None,
+                       verbose=0, warm_start=False) 
+
+tp: 870 tn: 2503 fp: 291 fn: 780
+Acc: 0.759000900090009 Sens: 0.5272727272727272 Spec: 0.895848246241947
+AUC
+ 0.8141814711177633
+Feature ranking:
+1. feature 33 (0.080777)
+2. feature 30 (0.068744)
+3. feature 32 (0.066109)
+4. feature 12 (0.064934)
+5. feature 13 (0.060475)
+6. feature 31 (0.055210)
+7. feature 14 (0.047576)
+8. feature 48 (0.033059)
+9. feature 34 (0.032605)
+10. feature 35 (0.031119)
+11. feature 15 (0.026803)
+12. feature 6 (0.025586)
+13. feature 10 (0.023756)
+14. feature 3 (0.022602)
+15. feature 4 (0.022191)
+16. feature 18 (0.021214)
+17. feature 29 (0.021123)
+18. feature 9 (0.021014)
+19. feature 28 (0.020933)
+20. feature 11 (0.013276)
+21. feature 40 (0.012408)
+22. feature 21 (0.012345)
+23. feature 41 (0.011715)
+24. feature 52 (0.011271)
+25. feature 47 (0.011097)
+26. feature 42 (0.010029)
+27. feature 37 (0.009638)
+28. feature 46 (0.009319)
+29. feature 49 (0.009270)
+30. feature 24 (0.009147)
+31. feature 38 (0.009131)
+32. feature 26 (0.008381)
+33. feature 0 (0.008160)
+34. feature 2 (0.007572)
+35. feature 27 (0.007417)
+36. feature 36 (0.007024)
+37. feature 43 (0.006919)
+38. feature 39 (0.006637)
+39. feature 17 (0.006258)
+40. feature 45 (0.006147)
+41. feature 51 (0.005891)
+42. feature 19 (0.005407)
+43. feature 25 (0.005037)
+44. feature 16 (0.004910)
+45. feature 53 (0.004790)
+46. feature 44 (0.004772)
+47. feature 50 (0.004581)
+48. feature 20 (0.003799)
+49. feature 54 (0.003521)
+50. feature 5 (0.003259)
+51. feature 1 (0.003148)
+52. feature 23 (0.003093)
+53. feature 7 (0.003037)
+54. feature 22 (0.002948)
+55. feature 8 (0.002816)
